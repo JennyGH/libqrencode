@@ -1,0 +1,93 @@
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
+PROJECT(libqrencode VERSION 1.0.0)
+
+MESSAGE(STATUS "PROJECT INFO:")
+MESSAGE(STATUS "    CMAKE_PROJECT_NAME:    ${CMAKE_PROJECT_NAME}")
+MESSAGE(STATUS "    CMAKE_BUILD_TYPE:      ${CMAKE_BUILD_TYPE}")
+MESSAGE(STATUS "    CMAKE_SOURCE_DIR:      ${CMAKE_SOURCE_DIR}")
+MESSAGE(STATUS "    CMAKE_PROJECT_VERSION: ${CMAKE_PROJECT_VERSION}")
+
+MESSAGE(STATUS "SYSTEM INFO:")
+MESSAGE(STATUS "    CMAKE_SYSTEM_NAME:      ${CMAKE_SYSTEM_NAME}")
+MESSAGE(STATUS "    CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+MESSAGE(STATUS "    CMAKE_SIZEOF_VOID_P:    ${CMAKE_SIZEOF_VOID_P}")
+
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY     "${CMAKE_BINARY_DIR}/bin")
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY     "${CMAKE_BINARY_DIR}/bin")
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY     "${CMAKE_BINARY_DIR}/bin")
+
+SET(ZLIB_ROOT_DIR                      "${CMAKE_SOURCE_DIR}/3rd/zlib")
+SET(LIBPNG_ROOT_DIR                    "${CMAKE_SOURCE_DIR}/3rd/libpng")
+
+########## For diffrent platform ##########
+IF(UNIX AND NOT APPLE)
+    SET(LINUX 1)
+    ADD_DEFINITIONS(-DLINUX=1)
+ENDIF(UNIX AND NOT APPLE)
+
+IF(APPLE)
+    SET(APPLE 1)
+    ADD_DEFINITIONS(-DAPPLE=1)
+ENDIF(APPLE)
+
+IF(WIN32)
+    SET(WINDOWS 1)
+    ADD_DEFINITIONS(-DWINDOWS=1)
+ENDIF(WIN32)
+###########################################
+
+IF(WINDOWS)
+    SET(CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS}   /MP")
+    SET(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} /MP")
+    SET(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} /O2 /W0")
+ELSE(WINDOWS)
+    SET(CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS}   -fPIC")
+    SET(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} -fPIC")
+	SET(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} -O3 -w")
+ENDIF(WINDOWS)
+
+# Add C/C++ Macros
+ADD_DEFINITIONS(
+    -DUNICODE
+    -D_UNICODE
+)
+
+INCLUDE_DIRECTORIES(
+# You can add include directory here, like:
+#   ${CMAKE_SOURCE_DIR}/3rd/jsoncpp/include
+    ${LIBPNG_ROOT_DIR}/include
+)
+
+# Add link directories
+LINK_DIRECTORIES(
+    ${ZLIB_ROOT_DIR}/lib
+    ${LIBPNG_ROOT_DIR}/lib
+# You can add link directory here, like:
+#   ${CMAKE_SOURCE_DIR}/3rd/jsoncpp/lib
+#   ${CMAKE_SOURCE_DIR}/3rd/jsoncpp/lib/${CMAKE_CFG_INTDIR}
+)
+
+##########################################
+# Set MD --> MT, MDd --> MTd
+IF(MSVC)
+    SET(
+        CompilerFlags
+        CMAKE_CXX_FLAGS
+        CMAKE_CXX_FLAGS_DEBUG
+        CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_C_FLAGS
+        CMAKE_C_FLAGS_DEBUG
+        CMAKE_C_FLAGS_RELEASE
+    )
+    FOREACH(CompilerFlag ${CompilerFlags})
+        STRING(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
+    ENDFOREACH()
+ENDIF(MSVC)
+##########################################
+
+# Add sub projects.
+ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(test)
+
+SET_TARGET_PROPERTIES(${PRJ_TARGET} PROPERTIES FOLDER "CMakePredefinedTargets")
