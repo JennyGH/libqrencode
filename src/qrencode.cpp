@@ -171,6 +171,36 @@ int QRENCODE_CAPI qrencode_encode(qrencode_ptr_t encoder, const char* content)
     RETURN(QRENCODE_SUCCESS);
 }
 
+int QRENCODE_CAPI qrencode_get_encoded_matrix(qrencode_ptr_t encoder, unsigned char ** outBytes, unsigned int * width)
+{
+    if (NULL == encoder)
+    {
+        RETURN(QRENCODE_INVALID_HANDLE);
+    }
+
+    if (NULL == outBytes || NULL == width)
+    {
+        RETURN(QRENCODE_INVALID_PARAM);
+    }
+
+    int qrcodeWidth = encoder->core.m_nSymbleSize;
+    if (qrcodeWidth == 0)
+    {
+        RETURN(QRENCODE_NEED_ENCODE);
+    }
+
+    unsigned int remain = qrcodeWidth * qrcodeWidth;
+    *outBytes = new unsigned char[remain]();
+    *width = qrcodeWidth;
+    for (unsigned int i = 0; i < qrcodeWidth; i++)
+    {
+        ::memcpy_s(*outBytes + i * qrcodeWidth, remain, encoder->core.m_byModuleData[i], qrcodeWidth);
+        remain -= qrcodeWidth;
+    }
+
+    RETURN(QRENCODE_SUCCESS);
+}
+
 int QRENCODE_CAPI qrencode_get_encoded_minimum_width(qrencode_ptr_t encoder, unsigned int * width)
 {
     if (NULL == encoder)

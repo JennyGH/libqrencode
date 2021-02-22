@@ -26,6 +26,27 @@ static inline void byte_to_hex(unsigned char byte, char* hex)
     hex[1] = hex_mapping((byte & 0x0F) >> 0);
 }
 
+static inline void show_matrix(const unsigned char* matrix, unsigned int width)
+{
+    for (unsigned int i = 0; i < width; i++)
+    {
+        for (unsigned int j = 0; j < width; j++)
+        {
+            unsigned char val = *(matrix + i * width + j);
+            if (!val)
+            {
+                printf("¡ö");
+            }
+            else
+            {
+                printf("  ");
+            }
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
 int main()
 {
     int rv = QRENCODE_SUCCESS;
@@ -57,6 +78,14 @@ int main()
     {
         return rv;
     }
+    unsigned char * matrix = NULL;
+    unsigned int    matrixWidth = 0;
+    rv = qrencode_get_encoded_matrix(encoder, &matrix, &matrixWidth);
+    if (QRENCODE_SUCCESS != rv)
+    {
+        return rv;
+    }
+    show_matrix(matrix, matrixWidth);
     unsigned int minWidth = 0;
     rv = qrencode_get_encoded_minimum_width(encoder, &minWidth);
     if (QRENCODE_SUCCESS != rv)
@@ -73,6 +102,7 @@ int main()
     delete[] hex;
     hex = NULL;
     qrencode_free_memory(data);
+    qrencode_free_memory(matrix);
     qrencode_free_encoder(encoder);
     return 0;
 }

@@ -63,6 +63,10 @@ extern "C" {
 
     int
         QRENCODE_CAPI
+        qrencode_get_encoded_matrix(qrencode_ptr_t encoder, unsigned char** outBytes, unsigned int * width);
+
+    int
+        QRENCODE_CAPI
         qrencode_get_encoded_minimum_width(qrencode_ptr_t encoder, unsigned int * width);
 
     int
