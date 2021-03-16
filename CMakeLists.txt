@@ -35,6 +35,14 @@ IF(WIN32)
     SET(WINDOWS 1)
     ADD_DEFINITIONS(-DWINDOWS=1)
 ENDIF(WIN32)
+
+IF(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+    SET(CL_X64 0)
+    SET(LIB_DIR_SUFFIX "x86")
+ELSE()
+    SET(CL_X64 1)
+    SET(LIB_DIR_SUFFIX "x64")
+ENDIF() ## Build for Windows x86 platform
 ###########################################
 
 IF(WINDOWS)
@@ -61,8 +69,8 @@ INCLUDE_DIRECTORIES(
 
 # Add link directories
 LINK_DIRECTORIES(
-    ${ZLIB_ROOT_DIR}/lib
-    ${LIBPNG_ROOT_DIR}/lib
+    ${ZLIB_ROOT_DIR}/lib/${LIB_DIR_SUFFIX}
+    ${LIBPNG_ROOT_DIR}/lib/${LIB_DIR_SUFFIX}
 # You can add link directory here, like:
 #   ${CMAKE_SOURCE_DIR}/3rd/jsoncpp/lib
 #   ${CMAKE_SOURCE_DIR}/3rd/jsoncpp/lib/${CMAKE_CFG_INTDIR}
