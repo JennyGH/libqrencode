@@ -1,44 +1,45 @@
 #include "qrencode.h"
 #include "QRCodeGenerator.h"
+#include "platform_compatibility.h"
 #include <png.h>
 #include <string.h>
 #include <stdlib.h>
 #include <string>
 
-#define RETURN(val) return(val)
+#define RETURN(val) return (val)
 
 #define QR_CONTENT_MAX_SIZE 512
-#define QR_CHANNEL_COUNT    3       // RGB
+#define QR_CHANNEL_COUNT    3 // RGB
 
-#define COLOR_GET_R(color) (((color) & 0x00FF0000) >> 16)
-#define COLOR_GET_G(color) (((color) & 0x0000FF00) >> 8 )
-#define COLOR_GET_B(color) (((color) & 0x000000FF) >> 0 )
+#define COLOR_GET_R(color) (((color)&0x00FF0000) >> 16)
+#define COLOR_GET_G(color) (((color)&0x0000FF00) >> 8)
+#define COLOR_GET_B(color) (((color)&0x000000FF) >> 0)
 
 #define CONSOLE(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
 
-#if !WIN32
-#ifndef memcpy_s
-#define memcpy_s(dest, destSize, src, srcSize) memcpy(dest, src, srcSize)
-#endif // !memcpy_s
-#endif // !WIN32
-
-struct qrencode_t {
-    CQR_Encode  core;
-    int         width;
-    int         version;
-    int         quality;
-    int         color;
-    int         background_color;
+struct qrencode_t
+{
+    CQR_Encode core;
+    int        width;
+    int        version;
+    int        quality;
+    int        color;
+    int        background_color;
 };
 
-static int  to_inner_qr_version(unsigned int version);
-static int  to_inner_qr_quality(unsigned int quality);
-static void stream_write_callback(png_structrp png_ptr, png_bytep bytes, size_t size);
+static int to_inner_qr_version(unsigned int version);
+static int to_inner_qr_quality(unsigned int quality);
+static void
+stream_write_callback(png_structrp png_ptr, png_bytep bytes, size_t size);
 static void stream_flush_callback(png_structrp png_ptr);
 static void png_error_callback(png_structrp png_ptr, png_const_charp message);
 static void png_warning_callback(png_structrp png_ptr, png_const_charp message);
-static void fill_pixels(png_bytep pixels, unsigned int x, unsigned int rgb, unsigned int pixel_size);
-static int  get_default_qrcode_image_width(int qrcode_width);
+static void fill_pixels(
+    png_bytep    pixels,
+    unsigned int x,
+    unsigned int rgb,
+    unsigned int pixel_size);
+static int get_default_qrcode_image_width(int qrcode_width);
 
 qrencode_ptr_t QRENCODE_CAPI qrencode_new_encoder()
 {
@@ -48,26 +49,24 @@ qrencode_ptr_t QRENCODE_CAPI qrencode_new_encoder()
         // ERROR
         return NULL;
     }
-    ptr->width = -1;
-    ptr->version = QRENCODE_VERSION_S;
-    ptr->quality = QRENCODE_LEVEL_L;
-    ptr->color = 0x000000;
+    ptr->width            = -1;
+    ptr->version          = QRENCODE_VERSION_S;
+    ptr->quality          = QRENCODE_LEVEL_L;
+    ptr->color            = 0x000000;
     ptr->background_color = 0xffffff;
     return ptr;
 }
 
-int QRENCODE_CAPI qrencode_set_version(qrencode_ptr_t encoder, unsigned int version)
+int QRENCODE_CAPI
+qrencode_set_version(qrencode_ptr_t encoder, unsigned int version)
 {
     if (NULL == encoder)
     {
         RETURN(QRENCODE_INVALID_HANDLE);
     }
 
-    if (
-        version != QRENCODE_VERSION_S &&
-        version != QRENCODE_VERSION_M &&
-        version != QRENCODE_VERSION_L
-        )
+    if (version != QRENCODE_VERSION_S && version != QRENCODE_VERSION_M &&
+        version != QRENCODE_VERSION_L)
     {
         RETURN(QRENCODE_UNSUPPORTED_VERSION);
     }
@@ -104,7 +103,8 @@ int QRENCODE_CAPI qrencode_set_color(qrencode_ptr_t encoder, unsigned int rgb)
     RETURN(QRENCODE_SUCCESS);
 }
 
-int QRENCODE_CAPI qrencode_set_background_color(qrencode_ptr_t encoder, unsigned int rgb)
+int QRENCODE_CAPI
+qrencode_set_background_color(qrencode_ptr_t encoder, unsigned int rgb)
 {
     if (NULL == encoder)
     {
@@ -114,19 +114,16 @@ int QRENCODE_CAPI qrencode_set_background_color(qrencode_ptr_t encoder, unsigned
     RETURN(QRENCODE_SUCCESS);
 }
 
-int QRENCODE_CAPI qrencode_set_quality(qrencode_ptr_t encoder, unsigned int quality)
+int QRENCODE_CAPI
+qrencode_set_quality(qrencode_ptr_t encoder, unsigned int quality)
 {
     if (NULL == encoder)
     {
         RETURN(QRENCODE_INVALID_HANDLE);
     }
 
-    if (
-        quality != QRENCODE_LEVEL_L &&
-        quality != QRENCODE_LEVEL_M &&
-        quality != QRENCODE_LEVEL_Q &&
-        quality != QRENCODE_LEVEL_H
-        )
+    if (quality != QRENCODE_LEVEL_L && quality != QRENCODE_LEVEL_M &&
+        quality != QRENCODE_LEVEL_Q && quality != QRENCODE_LEVEL_H)
     {
         RETURN(QRENCODE_UNSUPPORTED_QUALITY);
     }
@@ -161,8 +158,7 @@ int QRENCODE_CAPI qrencode_encode(qrencode_ptr_t encoder, const char* content)
         to_inner_qr_version(encoder->version),
         true,
         QR_MODE_8BIT,
-        content
-    );
+        content);
     if (!bSuccess)
     {
         RETURN(QRENCODE_FAIL);
@@ -171,7 +167,10 @@ int QRENCODE_CAPI qrencode_encode(qrencode_ptr_t encoder, const char* content)
     RETURN(QRENCODE_SUCCESS);
 }
 
-int QRENCODE_CAPI qrencode_get_encoded_matrix(qrencode_ptr_t encoder, unsigned char ** outBytes, unsigned int * width)
+int QRENCODE_CAPI qrencode_get_encoded_matrix(
+    qrencode_ptr_t  encoder,
+    unsigned char** outBytes,
+    unsigned int*   width)
 {
     if (NULL == encoder)
     {
@@ -190,18 +189,23 @@ int QRENCODE_CAPI qrencode_get_encoded_matrix(qrencode_ptr_t encoder, unsigned c
     }
 
     unsigned int remain = qrcodeWidth * qrcodeWidth;
-    *outBytes = new unsigned char[remain]();
-    *width = qrcodeWidth;
+    *outBytes           = new unsigned char[remain]();
+    *width              = qrcodeWidth;
     for (unsigned int i = 0; i < qrcodeWidth; i++)
     {
-        ::memcpy_s(*outBytes + i * qrcodeWidth, remain, encoder->core.m_byModuleData[i], qrcodeWidth);
+        ::memcpy_s(
+            *outBytes + i * qrcodeWidth,
+            remain,
+            encoder->core.m_byModuleData[i],
+            qrcodeWidth);
         remain -= qrcodeWidth;
     }
 
     RETURN(QRENCODE_SUCCESS);
 }
 
-int QRENCODE_CAPI qrencode_get_encoded_minimum_width(qrencode_ptr_t encoder, unsigned int * width)
+int QRENCODE_CAPI
+qrencode_get_encoded_minimum_width(qrencode_ptr_t encoder, unsigned int* width)
 {
     if (NULL == encoder)
     {
@@ -219,7 +223,11 @@ int QRENCODE_CAPI qrencode_get_encoded_minimum_width(qrencode_ptr_t encoder, uns
     RETURN(QRENCODE_SUCCESS);
 }
 
-int QRENCODE_CAPI qrencode_get_encoded_image(qrencode_ptr_t encoder, unsigned int width, unsigned char ** outBytes, unsigned int * outSize)
+int QRENCODE_CAPI qrencode_get_encoded_image(
+    qrencode_ptr_t  encoder,
+    unsigned int    width,
+    unsigned char** outBytes,
+    unsigned int*   outSize)
 {
     if (NULL == encoder)
     {
@@ -261,7 +269,7 @@ int QRENCODE_CAPI qrencode_get_encoded_image(qrencode_ptr_t encoder, unsigned in
 
     // Initialize info structure
     png_infop info_ptr = NULL;
-    info_ptr = png_create_info_struct(png_ptr);
+    info_ptr           = png_create_info_struct(png_ptr);
     if (info_ptr == NULL)
     {
         png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
@@ -288,17 +296,20 @@ int QRENCODE_CAPI qrencode_get_encoded_image(qrencode_ptr_t encoder, unsigned in
         PNG_COLOR_TYPE_RGB,
         PNG_INTERLACE_NONE,
         PNG_COMPRESSION_TYPE_BASE,
-        PNG_FILTER_TYPE_BASE
-    );
+        PNG_FILTER_TYPE_BASE);
 
     std::string container;
-    png_set_write_fn(png_ptr, &container, stream_write_callback, stream_flush_callback);
+    png_set_write_fn(
+        png_ptr,
+        &container,
+        stream_write_callback,
+        stream_flush_callback);
 
     png_write_info(png_ptr, info_ptr);
 
     // Allocate memory for one row (3 bytes per pixel - RGB)
-    size_t rowSize = width * QR_CHANNEL_COUNT;
-    png_bytep row = new png_byte[rowSize]();
+    size_t    rowSize = width * QR_CHANNEL_COUNT;
+    png_bytep row     = new png_byte[rowSize]();
 
     // Write image data
     for (int y = 0; y < qrcodeWidth; y++)
@@ -342,17 +353,21 @@ int QRENCODE_CAPI qrencode_get_encoded_image(qrencode_ptr_t encoder, unsigned in
     // ============================================================
 
     *outBytes = new unsigned char[container.length()]();
-    memcpy_s(*outBytes, container.length(), container.data(), container.length());
+    memcpy_s(
+        *outBytes,
+        container.length(),
+        container.data(),
+        container.length());
     *outSize = container.length();
 
     RETURN(QRENCODE_SUCCESS);
 }
 
-void QRENCODE_CAPI qrencode_free_memory(void * memory)
+void QRENCODE_CAPI qrencode_free_memory(void* memory)
 {
     if (NULL != memory)
     {
-        delete[] memory;
+        delete[] static_cast<unsigned char*>(memory);
     }
 }
 
@@ -368,10 +383,14 @@ int to_inner_qr_version(unsigned int version)
 {
     switch (version)
     {
-    case QRENCODE_VERSION_S: return QR_VERSION_S;
-    case QRENCODE_VERSION_M: return QR_VERSION_M;
-    case QRENCODE_VERSION_L: return QR_VERSION_L;
-    default:                 return QR_VERSION_S;
+        case QRENCODE_VERSION_S:
+            return QR_VERSION_S;
+        case QRENCODE_VERSION_M:
+            return QR_VERSION_M;
+        case QRENCODE_VERSION_L:
+            return QR_VERSION_L;
+        default:
+            return QR_VERSION_S;
     }
 }
 
@@ -379,23 +398,27 @@ int to_inner_qr_quality(unsigned int quality)
 {
     switch (quality)
     {
-    case QRENCODE_LEVEL_L: return QR_LEVEL_L;
-    case QRENCODE_LEVEL_M: return QR_LEVEL_M;
-    case QRENCODE_LEVEL_Q: return QR_LEVEL_Q;
-    case QRENCODE_LEVEL_H: return QR_LEVEL_H;
-    default:               return QR_LEVEL_L;
+        case QRENCODE_LEVEL_L:
+            return QR_LEVEL_L;
+        case QRENCODE_LEVEL_M:
+            return QR_LEVEL_M;
+        case QRENCODE_LEVEL_Q:
+            return QR_LEVEL_Q;
+        case QRENCODE_LEVEL_H:
+            return QR_LEVEL_H;
+        default:
+            return QR_LEVEL_L;
     }
 }
 
 void stream_write_callback(png_structrp png_ptr, png_bytep bytes, size_t size)
 {
-    std::string& container = *(static_cast<std::string*>(png_get_io_ptr(png_ptr)));
+    std::string& container =
+        *(static_cast<std::string*>(png_get_io_ptr(png_ptr)));
     container.append(bytes, bytes + size);
 }
 
-void stream_flush_callback(png_structrp png_ptr)
-{
-}
+void stream_flush_callback(png_structrp png_ptr) {}
 
 void png_error_callback(png_structrp png_ptr, png_const_charp message)
 {
@@ -407,7 +430,11 @@ void png_warning_callback(png_structrp png_ptr, png_const_charp message)
     CONSOLE("[WARNING] %s", message);
 }
 
-void fill_pixels(png_bytep row, unsigned int x, unsigned int rgb, unsigned int pixel_size)
+void fill_pixels(
+    png_bytep    row,
+    unsigned int x,
+    unsigned int rgb,
+    unsigned int pixel_size)
 {
     png_byte r = COLOR_GET_R(rgb);
     png_byte g = COLOR_GET_G(rgb);
@@ -415,9 +442,9 @@ void fill_pixels(png_bytep row, unsigned int x, unsigned int rgb, unsigned int p
     for (unsigned int i = 0; i < pixel_size; i++)
     {
         unsigned int pixel = ((x * pixel_size) + i) * QR_CHANNEL_COUNT;
-        row[pixel + 0] = r;
-        row[pixel + 1] = g;
-        row[pixel + 2] = b;
+        row[pixel + 0]     = r;
+        row[pixel + 1]     = g;
+        row[pixel + 2]     = b;
     }
 }
 
