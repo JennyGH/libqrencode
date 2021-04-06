@@ -32,7 +32,7 @@ function build() {
           ..
     cmake --build .             \
           --config $BUILD_TYPE  \
-          -- j $(nproc) &&      \
+          -- -j $(nproc) &&     \
     make install
     cd "$PROJECT_ROOT"
 }
