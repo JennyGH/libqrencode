@@ -13,20 +13,23 @@
 
 #    define __ASSERT(expr) __ASSERT_WITH_FILE(expr, file, line)
 
-static void
-_default_assert_hook(const char* expr, const char* file, unsigned int line)
+namespace qrencode
 {
-    fprintf(
-        stderr,
-        "Assertion failed: %s, at file: \"%s\", line: %d",
-        expr,
-        file,
-        line);
-}
+    static void
+    _default_assert_hook(const char* expr, const char* file, unsigned int line)
+    {
+        fprintf(
+            stderr,
+            "Assertion failed: %s, at file: \"%s\", line: %d",
+            expr,
+            file,
+            line);
+    }
+} // namespace qrencode
 
-assert_hook_t g_assert_hook = _default_assert_hook;
+qrencode::assert_hook_t g_assert_hook = qrencode::_default_assert_hook;
 
-void set_assert_hook(assert_hook_t hook)
+void qrencode::set_assert_hook(assert_hook_t hook)
 {
     if (NULL != hook)
     {
@@ -35,7 +38,7 @@ void set_assert_hook(assert_hook_t hook)
 }
 
 #    if memcpy_s
-void __memcpy_s(
+void qrencode::__memcpy_s(
     const char* file,
     size_t      line,
     void*       dest,
@@ -50,7 +53,7 @@ void __memcpy_s(
 #    endif // memcpy_s
 
 #    ifndef vsprintf_s
-int __vsprintf_s(
+int qrencode::__vsprintf_s(
     const char* file,
     size_t      line,
     char*       dest,
@@ -68,7 +71,7 @@ int __vsprintf_s(
 #    endif // !vsprintf_s
 
 #    ifndef sprintf_s
-int __sprintf_s(
+int qrencode::__sprintf_s(
     const char* file,
     size_t      line,
     char*       dest,
@@ -79,14 +82,14 @@ int __sprintf_s(
 
     va_list args;
     va_start(args, format);
-    int rc = __vsprintf_s(file, line, dest, dest_size, format, args);
+    int rc = qrencode::__vsprintf_s(file, line, dest, dest_size, format, args);
     va_end(args);
     return rc;
 }
 #    endif // !sprintf_s
 
 #    ifndef sscanf_s
-int __sscanf_s(
+int qrencode::__sscanf_s(
     const char* file,
     size_t      line,
     const char* buffer,
@@ -104,7 +107,7 @@ int __sscanf_s(
 #    endif // !sscanf_s
 
 #    ifndef strcpy_s
-int __strcpy_s(
+int qrencode::__strcpy_s(
     const char* file,
     size_t      line,
     char*       dest,
@@ -120,7 +123,7 @@ int __strcpy_s(
 }
 #    endif // !strcpy_s
 
-pid_t __gettid()
+pid_t qrencode::__gettid()
 {
     static __thread pid_t tid = 0;
     if (tid == 0)
