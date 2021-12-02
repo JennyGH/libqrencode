@@ -50,6 +50,7 @@ namespace qrencode
     void set_assert_hook(assert_hook_t hook);
 
 #    ifndef memcpy_s
+#        define __no_memcpy_s
     void __memcpy_s(
         const char* file,
         size_t      line,
@@ -60,6 +61,7 @@ namespace qrencode
 #    endif // !memcpy_s
 
 #    ifndef vsprintf_s
+#        define __no_vsprintf_s
     int __vsprintf_s(
         const char* file,
         size_t      line,
@@ -81,6 +83,7 @@ namespace qrencode
 #    endif // !vsprintf_s
 
 #    ifndef sprintf_s
+#        define __no_sprintf_s
     int __sprintf_s(
         const char* file,
         size_t      line,
@@ -106,6 +109,7 @@ namespace qrencode
 #    endif // !sprintf_s
 
 #    ifndef sscanf_s
+#        define __no_sscanf_s
     int __sscanf_s(
         const char* file,
         size_t      line,
@@ -115,6 +119,7 @@ namespace qrencode
 #    endif // !sscanf_s
 
 #    ifndef strcpy_s
+#        define __no_strcpy_s
     int __strcpy_s(
         const char* file,
         size_t      line,

@@ -44,6 +44,8 @@ IF(MSVC)
 ELSE()
     SET(CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS}   -fPIC")
     SET(CMAKE_CXX_FLAGS                "${CMAKE_CXX_FLAGS} -fPIC")
+    SET(CMAKE_CXX_FLAGS_DEBUG          "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Wall -ggdb")
+    SET(CMAKE_CXX_FLAGS_RELEASE        "${CMAKE_CXX_FLAGS_RELEASE} -s")
 ENDIF()
 
 # Add C/C++ Macros
